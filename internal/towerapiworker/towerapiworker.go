@@ -124,7 +124,7 @@ func (w *workUnit) setClient(c *http.Client) error {
 		var tr *http.Transport
 		if w.config.SkipVerifyCertificate {
 			config := &tls.Config{InsecureSkipVerify: true}
-			tr = &http.Transport{TLSClientConfig: config}
+			tr = &http.Transport{TLSClientConfig: config, Proxy: http.ProxyFromEnvironment}
 		}
 		w.client = &http.Client{Transport: tr}
 	} else {

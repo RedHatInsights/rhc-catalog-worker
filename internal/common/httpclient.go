@@ -39,7 +39,7 @@ func MakeHTTPClient(request *http.Request) (*http.Client, error) {
 		}
 
 		tlsConfig.BuildNameToCertificate()
-		transport := &http.Transport{TLSClientConfig: tlsConfig}
+		transport := &http.Transport{TLSClientConfig: tlsConfig, Proxy: http.ProxyFromEnvironment}
 		return &http.Client{Transport: transport}, nil
 	}
 

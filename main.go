@@ -109,7 +109,26 @@ func makeConfig() *common.CatalogConfig {
 		}
 	*/
 
+	setProxies()
 	return &config
+}
+
+//setProxies sets the HTTP and HTTPS PROXY env vars
+func setProxies() {
+	if httpProxy := viper.GetString("PROXIES.HTTP_PROXY"); httpProxy != "" {
+		log.Infof("Setting HTTP_PROXY %s", httpProxy)
+		os.Setenv("HTTP_PROXY", httpProxy)
+	}
+
+	if httpsProxy := viper.GetString("PROXIES.HTTPS_PROXY"); httpsProxy != "" {
+		log.Infof("Setting HTTPS_PROXY %s", httpsProxy)
+		os.Setenv("HTTPS_PROXY", httpsProxy)
+	}
+
+	if noProxy := viper.GetString("PROXIES.NO_PROXY"); noProxy != "" {
+		log.Infof("Setting NO_PROXY %s", noProxy)
+		os.Setenv("NO_PROXY", noProxy)
+	}
 }
 
 // Configure the logger

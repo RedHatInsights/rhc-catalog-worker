@@ -23,3 +23,8 @@ timeout_minutes=10
 [logger]
 level="info"
 logfile="./rhc-worker-catalog" #log file path and name without .log extension
+
+[PROXIES]
+HTTP_PROXY="http://myproxy:3128"
+HTTPS_PROXY="http://myproxy:3128"
+NO_PROXY="localhost"

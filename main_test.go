@@ -37,6 +37,9 @@ func TestMain(t *testing.T) {
 	assert.Equal(t, "info", frh.catalogConfig.Level)
 	assert.Equal(t, "<<Your Tower URL>>", frh.catalogConfig.URL)
 	assert.Equal(t, "<<Your Tower Token>>", frh.catalogConfig.Token)
+	assert.Equal(t, os.Getenv("HTTP_PROXY"), "http://myproxy:3128")
+	assert.Equal(t, os.Getenv("HTTPS_PROXY"), "http://myproxy:3128")
+	assert.Equal(t, os.Getenv("NO_PROXY"), "localhost")
 	assert.Equal(t, &towerapiworker.DefaultAPIWorker{}, frh.workHandler)
 }
 

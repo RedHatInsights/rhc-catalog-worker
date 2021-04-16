@@ -45,13 +45,17 @@ func TestMain(t *testing.T) {
 
 func TestConfigSearchPath(t *testing.T) {
 	assert.Panics(t, func() { initConfig() })
-
 	configFile, err := getConfigFile()
 	assert.NotNil(t, err)
+	assert.Empty(t, configFile)
 
-	os.MkdirAll("./rhc/workers", os.ModePerm)
-	os.Create("./rhc/workers/catalog.toml")
+	err = os.MkdirAll("./rhc/workers", os.ModePerm)
+	assert.NoError(t, err)
+	_, err = os.Create("./rhc/workers/catalog.toml")
+	assert.NoError(t, err)
 	configFile, err = getConfigFile()
+	assert.NoError(t, err)
 	assert.Equal(t, "./rhc/workers/catalog.toml", configFile)
-	os.RemoveAll("./rhc/workers")
+	err = os.RemoveAll("./rhc/workers")
+	assert.NoError(t, err)
 }

@@ -19,7 +19,8 @@ func TestTarCompressDirectory(t *testing.T) {
 		data := []byte(strings.Repeat("na", 512))
 		f, err := os.Create(dirName + "/" + fname)
 		assert.NoError(t, err)
-		f.Write(data)
+		_, err = f.Write(data)
+		assert.NoError(t, err)
 		f.Close()
 	}
 

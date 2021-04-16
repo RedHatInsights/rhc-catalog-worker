@@ -86,7 +86,11 @@ func TarCompressDirectory(dir string, outfile string) (string, error) {
 		return "", err
 	}
 
-	f.Seek(0, 0)
+	if _, err := f.Seek(0, 0); err != nil {
+		log.Errorf("Error seeking to top of file")
+		return "", err
+	}
+
 	hash := sha256.New()
 	if _, err := io.Copy(hash, f); err != nil {
 		return "", err

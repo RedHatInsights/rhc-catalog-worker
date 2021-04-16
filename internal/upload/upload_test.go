@@ -6,12 +6,15 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUpload(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte("mock body"))
+		_, err := w.Write([]byte("mock body"))
+		assert.NoError(t, err)
 
 		if r.Method != "POST" {
 			t.Errorf("Expected POST request, got %s", r.Method)
@@ -33,7 +36,8 @@ func TestUpload(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to create test datafile for uploading. Reason %s", err)
 	}
-	f.Write(data)
+	_, err = f.Write(data)
+	assert.NoError(t, err)
 	f.Close()
 	defer os.Remove("testuploaddata.file")
 	metadata := map[string]string{

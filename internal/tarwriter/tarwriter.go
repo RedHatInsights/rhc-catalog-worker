@@ -44,9 +44,13 @@ func MakeTarWriter(ctx context.Context, task catalogtask.CatalogTask, input comm
 // Write a Page given the name and the number of bytes to write
 func (tw *tarWriter) Write(name string, b []byte) error {
 	baseDir := filepath.Join(tw.dir, filepath.Dir(name))
-	os.MkdirAll(baseDir, os.ModePerm)
+	err := os.MkdirAll(baseDir, os.ModePerm)
+	if err != nil {
+		tw.glog.Errorf("Error creating directory %s %v", baseDir, err)
+		return err
+	}
 	tw.glog.Infof("adding file %s", filepath.Join(tw.dir, name))
-	err := ioutil.WriteFile(filepath.Join(tw.dir, name), b, 0644)
+	err = ioutil.WriteFile(filepath.Join(tw.dir, name), b, 0644)
 	if err != nil {
 		tw.glog.Errorf("Error writing file %s %v", name, err)
 		return err
@@ -59,7 +63,10 @@ func (tw *tarWriter) Flush() error {
 	var statusErrors []string
 	defer func() {
 		if len(statusErrors) > 0 {
-			tw.FlushErrors(statusErrors)
+			err := tw.FlushErrors(statusErrors)
+			if err != nil {
+				tw.glog.Errorf("Error flushing errors to server: %v", err)
+			}
 		}
 	}()
 

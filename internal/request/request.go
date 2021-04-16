@@ -80,7 +80,10 @@ func startDispatcher(ctx context.Context, config *common.CatalogConfig, wc tower
 			done = true
 		case page := <-wc.ResponseChannel:
 			glog.Infof("Data received on response channel %s", page.Name)
-			pw.Write(page.Name, page.Data)
+			err := pw.Write(page.Name, page.Data)
+			if err != nil {
+				glog.Errorf("Error writing page %v", err)
+			}
 		case <-wc.FinishedChannel:
 			finishedCount++
 		default:
@@ -174,7 +177,7 @@ func processRequest(ctx context.Context,
 			glog.Info("Workers finished")
 			allDone = true
 		case data := <-wc.ErrorChannel:
-			glog.Infof("Error received %s", data)
+			glog.Errorf("Error received %s", data)
 			allErrors = append(allErrors, data)
 		case <-time.After(time.Duration(timeout) * time.Minute):
 			glog.Infof("Waitgroup timed out")
@@ -186,7 +189,10 @@ func processRequest(ctx context.Context,
 	}
 
 	if len(allErrors) > 0 {
-		pw.FlushErrors(allErrors)
+		err := pw.FlushErrors(allErrors)
+		if err != nil {
+			glog.Errorf("Error flushing errors to server %v", err)
+		}
 	} else {
 		pw.Flush()
 	}
@@ -198,7 +204,10 @@ func startWorker(ctx context.Context, config *common.CatalogConfig, job common.J
 	glog.Info("Worker starting")
 	glog.Info(stats())
 	defer glog.Info("Worker finished")
-	wh.StartWork(ctx, config, job, nil, wc)
+	err := wh.StartWork(ctx, config, job, nil, wc)
+	if err != nil {
+		glog.Errorf("Error starting work  %v", err)
+	}
 	wc.FinishedChannel <- true
 }
 

@@ -29,7 +29,8 @@ func (m *mockCatalogTask) Update(data map[string]interface{}) error {
 func shareWriteTest(t *testing.T, httpStatus int, body string) (*httptest.Server, *tarWriter) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(httpStatus)
-		w.Write([]byte(body))
+		_, err := w.Write([]byte(body))
+		assert.NoError(t, err)
 	}))
 
 	task := new(mockCatalogTask)
@@ -113,6 +114,7 @@ func TestFlushError(t *testing.T) {
 	task := new(mockCatalogTask)
 	task.On("Update", map[string]interface{}{"state": "completed", "status": "error", "output": &map[string]interface{}{"errors": []string{"error 1", "error 2"}}, "message": "Catalog Worker Ended with errors"}).Return(nil)
 	twriter, err := MakeTarWriter(logger.CtxWithLoggerID(context.Background(), "123"), task, common.RequestInput{UploadURL: "uploadURL"}, map[string]string{"task_url": "taskURL"})
+	assert.NoError(t, err)
 	err = twriter.FlushErrors([]string{"error 1", "error 2"})
 
 	task.AssertExpectations(t)

@@ -24,7 +24,8 @@ func TestGet(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(b)
+		_, err := w.Write(b)
+		assert.NoError(t, err)
 	}))
 
 	task := MakeCatalogTask(logger.CtxWithLoggerID(context.Background(), "123"), ts.URL)

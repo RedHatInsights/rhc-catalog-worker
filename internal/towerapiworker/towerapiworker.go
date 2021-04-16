@@ -54,13 +54,17 @@ func (aw *DefaultAPIWorker) StartWork(ctx context.Context, config *common.Catalo
 	glog.Info("Worker starting")
 	w := &workUnit{}
 	w.glog = glog
-	w.setConfig(config)
+	err := w.setConfig(config)
+	if err != nil {
+		glog.Errorf("Error setting config  %v", err)
+		return err
+	}
 	w.setJobParameters(params)
 	w.errorChannel = wc.ErrorChannel
 	w.shutdown = wc.Shutdown
 	w.dispatchChannel = wc.DispatchChannel
 	w.responseChannel = wc.ResponseChannel
-	err := w.setURL()
+	err = w.setURL()
 	if err != nil {
 		glog.Errorf("Error %v", err)
 		return err
@@ -87,9 +91,9 @@ type workUnit struct {
 	relatedObjects  []relatedObject
 }
 
-func (w *workUnit) setConfig(p *common.CatalogConfig) {
+func (w *workUnit) setConfig(p *common.CatalogConfig) error {
 	w.config = p
-	w.parseHost(p.URL)
+	return w.parseHost(p.URL)
 }
 
 func (w *workUnit) setJobParameters(data common.JobParam) {
@@ -118,7 +122,7 @@ func (w *workUnit) setRelatedObjects(data common.JobParam) {
 	}
 }
 
-func (w *workUnit) setClient(c *http.Client) error {
+func (w *workUnit) setClient(c *http.Client) {
 	w.glog.Infof("Setting client %v", c)
 	if c == nil {
 		var tr *http.Transport
@@ -130,7 +134,6 @@ func (w *workUnit) setClient(c *http.Client) error {
 	} else {
 		w.client = c
 	}
-	return nil
 }
 
 func (w *workUnit) dispatch() error {
@@ -167,7 +170,7 @@ func (w *workUnit) setURL() error {
 	return nil
 }
 
-func (w *workUnit) setRelated(data map[string]interface{}) error {
+func (w *workUnit) setRelated(data map[string]interface{}) {
 	r := relatedObject{}
 	for key, element := range data {
 		switch v := element.(type) {
@@ -185,7 +188,6 @@ func (w *workUnit) setRelated(data map[string]interface{}) error {
 	if r.relAttribute != "" {
 		w.relatedObjects = append(w.relatedObjects, r)
 	}
-	return nil
 }
 
 func (w *workUnit) overrideQueryParams(override map[string]interface{}) error {
@@ -215,7 +217,7 @@ func (w *workUnit) overrideQueryParams(override map[string]interface{}) error {
 func (w *workUnit) parseHost(host string) error {
 	u, err := url.Parse(host)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error parsing host %s %v", host, err)
 		return err
 	}
 	w.hostURL = u
@@ -230,6 +232,10 @@ func (w *workUnit) getPage() ([]byte, int, error) {
 	}
 
 	req, err := http.NewRequest("GET", w.parsedURL.String(), nil)
+	if err != nil {
+		w.glog.Errorf("Error building New Request %v", err)
+		return nil, 0, err
+	}
 	req.Header.Add("Authorization", "Bearer "+w.config.Token)
 	resp, err := w.client.Do(req)
 	if err != nil {
@@ -270,6 +276,10 @@ func (w *workUnit) post() error {
 	}
 
 	req, err := http.NewRequest("POST", w.parsedURL.String(), bytes.NewBuffer(b))
+	if err != nil {
+		w.glog.Errorf("Error creating new Post Request %v", err)
+		return err
+	}
 	req.Header.Add("Authorization", "Bearer "+w.config.Token)
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := w.client.Do(req)
@@ -494,10 +504,9 @@ func (w *workUnit) writePage(jsonBody map[string]interface{}, fileName string) e
 	return nil
 }
 
-func (w *workUnit) sendError(message string, httpStatus int) error {
+func (w *workUnit) sendError(message string, httpStatus int) {
 	s := fmt.Sprintf("URL: %s Status: %d Message: %s", w.input.HrefSlug, httpStatus, message)
 	w.errorChannel <- s
-	return nil
 }
 
 func successHTTPCode(code int) bool {

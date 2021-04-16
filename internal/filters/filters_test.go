@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMapFilterBadValue(t *testing.T) {
@@ -13,6 +15,10 @@ func TestMapFilterBadValue(t *testing.T) {
 	decoder := json.NewDecoder(bytes.NewReader([]byte(body)))
 	decoder.UseNumber()
 	err := decoder.Decode(&jsonBody)
+	if err != nil {
+		t.Error("Error decoding JSON")
+	}
+
 	_, err = f.Apply(jsonBody)
 	if err == nil {
 		t.Error("Parsing did not fail")
@@ -26,6 +32,9 @@ func TestMapFilter(t *testing.T) {
 	decoder := json.NewDecoder(bytes.NewReader([]byte(body)))
 	decoder.UseNumber()
 	err := decoder.Decode(&jsonBody)
+	if err != nil {
+		t.Error("Error decoding JSON")
+	}
 	result, err := f.Apply(jsonBody)
 	if err != nil {
 		t.Error(err)
@@ -39,6 +48,7 @@ func TestMapFilter(t *testing.T) {
 	}
 
 	value, err := result["id"].(json.Number).Int64()
+	assert.NoError(t, err)
 	if value != 100 {
 		t.Error("id didn't match 100")
 	}
@@ -55,16 +65,13 @@ func TestMapWithArrayFilter(t *testing.T) {
 	decoder := json.NewDecoder(bytes.NewReader([]byte(body)))
 	decoder.UseNumber()
 	err := decoder.Decode(&jsonBody)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 
 	result, err := f.Apply(jsonBody)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 
 	value, err := result["count"].(json.Number).Int64()
+	assert.NoError(t, err)
 	if value != 2 {
 		t.Error("count didn't match 2")
 	}

@@ -40,21 +40,21 @@ func (f *Value) Apply(jsonBody map[string]interface{}) (map[string]interface{}, 
 // can contain multiple objects and the filter needs to be applied to each
 // object and the results collection be updated.
 func (f *Value) Parse(element interface{}) {
-	switch e := element.(type) {
+	switch element := element.(type) {
 	case string:
-		f.Data = e
+		f.Data = element
 		f.ReplaceResults = true
 	case map[string]interface{}:
 		var sb strings.Builder
-		for key, value := range e {
-			switch v := value.(type) {
+		for key, value := range element {
+			switch value := value.(type) {
 			case string:
 				if sb.Len() == 0 {
 					sb.WriteString("{")
 				} else {
 					sb.WriteString(",")
 				}
-				sb.WriteString(key + ":" + v)
+				sb.WriteString(key + ":" + value)
 			}
 		}
 		sb.WriteString("}")

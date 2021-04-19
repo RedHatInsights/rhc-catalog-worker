@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testFileName string = "testuploaddata.file"
+
 func TestUpload(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
@@ -32,18 +34,18 @@ func TestUpload(t *testing.T) {
 	defer ts.Close()
 
 	data := []byte(strings.Repeat("na", 512))
-	f, err := os.Create("testuploaddata.file")
+	f, err := os.Create(testFileName)
 	if err != nil {
 		t.Errorf("Failed to create test datafile for uploading. Reason %s", err)
 	}
 	_, err = f.Write(data)
 	assert.NoError(t, err)
 	f.Close()
-	defer os.Remove("testuploaddata.file")
+	defer os.Remove(testFileName)
 	metadata := map[string]string{
 		"task_url": "https://www.example.com/12345678",
 	}
-	body, err := Upload(ts.URL+"/upload", "testuploaddata.file", "", metadata)
+	body, err := Upload(ts.URL+"/upload", testFileName, "", metadata)
 	if err != nil {
 		t.Error("ERROR from Upload:", err)
 	}

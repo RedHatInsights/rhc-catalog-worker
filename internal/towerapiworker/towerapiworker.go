@@ -66,7 +66,7 @@ func (aw *DefaultAPIWorker) StartWork(ctx context.Context, config *common.Catalo
 	w.responseChannel = wc.ResponseChannel
 	err = w.setURL()
 	if err != nil {
-		glog.Errorf("Error %v", err)
+		glog.Errorf("Error setting up URL %v", err)
 		return err
 	}
 	w.setClient(client)
@@ -157,12 +157,12 @@ func (w *workUnit) setURL() error {
 	var err error
 	w.parsedURL, err = url.Parse(w.input.HrefSlug)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error Parsing URL %v", err)
 		return err
 	}
 	w.parsedValues, err = url.ParseQuery(w.parsedURL.RawQuery)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error Parsing Query %v", err)
 		return err
 	}
 	w.parsedURL.Scheme = w.hostURL.Scheme
@@ -227,7 +227,7 @@ func (w *workUnit) parseHost(host string) error {
 func (w *workUnit) getPage() ([]byte, int, error) {
 	err := w.overrideQueryParams(w.input.Params)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error Overriding Query Params %v", err)
 		return nil, 0, err
 	}
 
@@ -239,13 +239,13 @@ func (w *workUnit) getPage() ([]byte, int, error) {
 	req.Header.Add("Authorization", "Bearer "+w.config.Token)
 	resp, err := w.client.Do(req)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error creating client request %v", err)
 		return nil, 0, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error reading HTTP response %v", err)
 		return nil, 0, err
 	}
 
@@ -271,7 +271,7 @@ func (w *workUnit) validateHTTPResponse(resp *http.Response, body []byte) error 
 func (w *workUnit) post() error {
 	b, err := json.Marshal(w.input.Params)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error Marshaling JSON payload %v", err)
 		return err
 	}
 
@@ -284,13 +284,13 @@ func (w *workUnit) post() error {
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := w.client.Do(req)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error creating HTTP POST request %v", err)
 		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error reading POST response %v", err)
 		return err
 	}
 	w.glog.Info("POST " + w.parsedURL.String() + " Status " + resp.Status)
@@ -301,7 +301,7 @@ func (w *workUnit) post() error {
 
 	job, err := w.writeResponse(body, filepath.Join(w.parsedURL.Path, "response.json"))
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error writing response body %v", err)
 		return err
 	}
 
@@ -315,12 +315,12 @@ func (w *workUnit) post() error {
 func (w *workUnit) writeResponse(body []byte, fileName string) (map[string]interface{}, error) {
 	jsonBody, err := w.createJSON(body)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error creating JSON %v", err)
 		return nil, err
 	}
 	err = w.writePage(jsonBody, fileName)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error writing a page %v", err)
 		return nil, err
 	}
 	return jsonBody, nil
@@ -336,13 +336,13 @@ func (w *workUnit) get() error {
 
 	jsonBody, err := w.writeResponse(body, filepath.Join(w.parsedURL.Path, filename))
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error writing response %v", err)
 		return err
 	}
 
 	err = w.requestAllRelations(jsonBody)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error requesting all relations %v", err)
 		return err
 	}
 
@@ -358,12 +358,12 @@ func (w *workUnit) get() error {
 			filename = fmt.Sprintf("%s%d.json", w.input.PagePrefix, page)
 			jsonBody, err := w.writeResponse(body, filepath.Join(w.parsedURL.Path, filename))
 			if err != nil {
-				w.glog.Errorf("Error %v", err)
+				w.glog.Errorf("Error writing response %v", err)
 				return err
 			}
 			err = w.requestAllRelations(jsonBody)
 			if err != nil {
-				w.glog.Errorf("Error %v", err)
+				w.glog.Errorf("Error requesting all relations %v", err)
 				return err
 			}
 			nextPage = jsonBody["next"]
@@ -448,7 +448,7 @@ func (w *workUnit) monitor() error {
 
 	_, err = w.writeResponse(body, filepath.Join(w.parsedURL.Path, "response.json"))
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error writing response %v", err)
 		return err
 	}
 
@@ -470,14 +470,14 @@ func (w *workUnit) createJSON(body []byte) (map[string]interface{}, error) {
 	decoder.UseNumber()
 	err := decoder.Decode(&jsonBody)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error decoding JSON %v", err)
 		return nil, err
 	}
 
 	if w.filterValue != nil {
 		jsonBody, err = w.filterValue.Apply(jsonBody)
 		if err != nil {
-			w.glog.Errorf("Error %v", err)
+			w.glog.Errorf("Error filtering %v", err)
 			return nil, err
 		}
 	}
@@ -486,7 +486,7 @@ func (w *workUnit) createJSON(body []byte) (map[string]interface{}, error) {
 	if ok && v != nil {
 		s, err := artifacts.Sanctify(v.(map[string]interface{}))
 		if err != nil {
-			w.glog.Errorf("Error %v", err)
+			w.glog.Errorf("Error sanctifying artifacts %v", err)
 			return nil, err
 		}
 		jsonBody["artifacts"] = s
@@ -497,7 +497,7 @@ func (w *workUnit) createJSON(body []byte) (map[string]interface{}, error) {
 func (w *workUnit) writePage(jsonBody map[string]interface{}, fileName string) error {
 	b, err := json.Marshal(jsonBody)
 	if err != nil {
-		w.glog.Errorf("Error %v", err)
+		w.glog.Errorf("Error marshaling json %v", err)
 		return err
 	}
 	w.responseChannel <- common.Page{Name: fileName, Data: b}

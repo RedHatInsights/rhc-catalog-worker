@@ -6,6 +6,8 @@ import (
 	"github.com/RedHatInsights/rhc-worker-catalog/internal/common"
 )
 
+const jobs15 string = "/api/v2/jobs/15"
+
 func TestGet(t *testing.T) {
 	t.Parallel()
 	responseBody := []string{`{"count": 200, "previous": null, "next": "/page/2", "results": [ {"name": "jt1", "id": 1, "url": "url1"},{"name": "jt2", "id": 2, "url":"url2"}]}`,
@@ -61,7 +63,7 @@ func TestMonitor(t *testing.T) {
 	}
 	jp := common.JobParam{
 		Method:                 "monitor",
-		HrefSlug:               "/api/v2/jobs/15",
+		HrefSlug:               jobs15,
 		RefreshIntervalSeconds: 1,
 	}
 	ts := &testScaffold{}
@@ -74,7 +76,7 @@ func TestMonitorMissing(t *testing.T) {
 	errors := []string{"URL: /api/v2/jobs/15 Status: 404 Message: Job Missing"}
 	jp := common.JobParam{
 		Method:   "monitor",
-		HrefSlug: "/api/v2/jobs/15",
+		HrefSlug: jobs15,
 	}
 	ts := &testScaffold{}
 	ts.runFail(t, jp, 404, responseBody, errors)
@@ -86,7 +88,7 @@ func TestMonitorStatusMissing(t *testing.T) {
 	errors := []string{"URL: /api/v2/jobs/15 Status: 0 Message: Object does not contain a status attribute"}
 	jp := common.JobParam{
 		Method:   "monitor",
-		HrefSlug: "/api/v2/jobs/15",
+		HrefSlug: jobs15,
 	}
 	ts := &testScaffold{}
 	ts.runFail(t, jp, 200, responseBody, errors)
@@ -97,7 +99,7 @@ func TestMonitorStatusInvalid(t *testing.T) {
 	errors := []string{"URL: /api/v2/jobs/15 Status: 0 Message: Status Charkie is not one of the known status"}
 	jp := common.JobParam{
 		Method:   "monitor",
-		HrefSlug: "/api/v2/jobs/15",
+		HrefSlug: jobs15,
 	}
 	ts := &testScaffold{}
 	ts.runFail(t, jp, 200, responseBody, errors)

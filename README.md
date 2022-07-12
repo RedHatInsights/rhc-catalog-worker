@@ -5,7 +5,7 @@ The Catalog Worker runs under the aegis of Red Hat Connect (rhc). It can be run 
 * Launch and monitor jobs on Ansible Tower.
 
 The Red Hat Connect (rhc) subscribes to a specific topic on the Cloud Connector based on its
-unqiue guid. When a task needs to be done on the client the Cloud Connector sends a small message
+unique guid. When a task needs to be done on the client the Cloud Connector sends a small message
 packet to the RHC which transfers the message to the Catalog Worker via GRPC. The message includes the url to get the task details, a date time stamp and the kind of task.
 ```json
 {
